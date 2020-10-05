@@ -30,6 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <iostream>
 #include <list>
 #include <string>
+#include <sys/reboot.h>
 #include <unistd.h>
 
 #define TICK_INTERVAL 32
@@ -249,6 +250,12 @@ int main(int argc, char **args)
 						continue;
 					}
 					break; // SDLK_BACKSPACE
+				case SDLK_POWER:
+					printf("Power off!\n");
+					sync();
+					reboot(RB_POWER_OFF);
+					printf("Failed to reboot: %s\n", strerror(errno));
+					break;
 				case SDLK_ESCAPE:
 					goto QUIT;
 					break; // SDLK_ESCAPE
