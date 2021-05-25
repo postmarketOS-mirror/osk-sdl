@@ -80,21 +80,16 @@ int main(int argc, char **args)
 		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Config override file could not be loaded, continuing");
 	}
 
+	/* Disable animations when using software rendering, overriding what's in the config */
+	config.animations = config.animations && !opts.softwareRendering;
+	config.keyPreview = config.keyPreview && !opts.softwareRendering;
+	SDL_LogInfo(SDL_LOG_CATEGORY_SYSTEM, "Enabling animations: %s",
+		    config.animations ? "true" : "false");
+
 	LuksDevice luksDev(opts.luksDevName, opts.luksDevPath, renderEventType);
 
 	atexit(SDL_Quit);
-	Uint32 sdlFlags = SDL_INIT_VIDEO | SDL_INIT_EVENTS | SDL_INIT_TIMER;
-
-	/*
-	 * DirectFB does not work with haptic feedback, so disable it if using
-	 * the DirectFB backend
-	 */
-	if (isDirectFB()) {
-		SDL_LogInfo(SDL_LOG_CATEGORY_SYSTEM, "Using directfb, not enabling haptic feedback.");
-		SDL_LogInfo(SDL_LOG_CATEGORY_SYSTEM, "Using directfb, animations have been disabled.");
-	} else {
-		sdlFlags |= SDL_INIT_HAPTIC;
-	}
+	Uint32 sdlFlags = SDL_INIT_VIDEO | SDL_INIT_EVENTS | SDL_INIT_TIMER | SDL_INIT_HAPTIC;
 
 	if (SDL_Init(sdlFlags) < 0) {
 		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "SDL_Init failed: %s", SDL_GetError());
@@ -134,13 +129,16 @@ int main(int argc, char **args)
 	/*
 	  * Prefer using GLES, since it's better supported on mobile devices
 	  * than full GL.
-	  * NOTE: DirectFB's SW GLES implementation is broken, so don't try to
-	  * use GLES w/ DirectFB
+	  * NOTE: sw rendering using GL, not GLES
 	  */
 	int rendererIndex = -1;
-	if (!opts.noGLES && !isDirectFB())
+	if (!opts.noGLES && !opts.softwareRendering)
 		rendererIndex = find_gles_driver_index();
-	renderer = SDL_CreateRenderer(display, rendererIndex, 0);
+	int rendererFlags = 0;
+	if (opts.softwareRendering) {
+		rendererFlags |= SDL_RENDERER_SOFTWARE;
+	}
+	renderer = SDL_CreateRenderer(display, rendererIndex, rendererFlags);
 
 	if (renderer == nullptr) {
 		SDL_LogError(SDL_LOG_CATEGORY_VIDEO, "Could not create renderer: %s", SDL_GetError());
@@ -249,6 +247,9 @@ int main(int argc, char **args)
 
 	SDL_RendererInfo rendererInfo;
 	SDL_GetRendererInfo(renderer, &rendererInfo);
+
+	SDL_LogInfo(SDL_LOG_CATEGORY_SYSTEM, "Using software rendering: %s",
+		    (rendererInfo.flags & SDL_RENDERER_SOFTWARE) ? "true" : "false");
 
 	// Start drawing keyboard when main loop starts
 	SDL_PushEvent(&renderEvent);

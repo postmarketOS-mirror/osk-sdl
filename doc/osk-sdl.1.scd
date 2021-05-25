@@ -44,7 +44,10 @@ OSK-SDL is a lightweight on screen keyboard used to unlock encrypted root partit
 	Enable keyscript mode. Password will be output to STDOUT for use with another program such as cryptsetup-initramfs.
 
 *-G, --no-gles*
-	Do not use OpenGL ES driver unless it is the default driver. This is the default behavior when using DirectFB.
+	Do not use OpenGL ES driver unless it is the default driver. This is the default behavior when using SW rendering.
+
+*-s, --software-rendering*
+	Force software rendering, instead of hardware accelerated graphics.
 
 # EXAMPLES
 

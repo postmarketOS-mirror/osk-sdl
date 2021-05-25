@@ -38,6 +38,7 @@ struct Opts {
 	std::string confPath;
 	std::string confOverridePath;
 	bool testMode;
+	bool softwareRendering;
 	bool verbose;
 	bool keyscript;
 	bool noGLES;
@@ -135,8 +136,8 @@ void handleTapEnd(unsigned xTapped, unsigned yTapped, int screenHeight, Keyboard
 void hapticRumble(SDL_Haptic *haptic, Config *config);
 
 /**
-  Determine if the app is using the directfb for video driver
-  @return true if using directfb, else false
+  Determine if the app is using software rendering
+  @return true if using SW rendering, else false
  */
-bool isDirectFB();
+bool isSwRenderer(SDL_Renderer *renderer);
 #endif
